@@ -6,7 +6,7 @@ export default function Board({ board }) {
   return (
     <View style={styles.container}>
       {board.map((row, rowIndex) => (
-        <Row key={rowIndex} cellValues={row} />
+        <Row key={rowIndex} rowIndex={rowIndex} cellValues={row} />
       ))}
     </View>
   );

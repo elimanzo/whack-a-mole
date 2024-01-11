@@ -1,11 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import { useReducer } from 'react';
+import { useReducer, useEffect } from 'react';
 
 import make2DArray from './make2DArray';
 import Board from './Board';
 function reducer(state, action) {
   switch (action.type) {
+    case 'whack-mole': {
+      return state;
+    }
+    case 'new-game': {
+      return makeInitialState();
+    }
+    case 'move-moles': {
+      return state;
+    }
   }
   return state;
 }
@@ -16,6 +25,17 @@ function makeInitialState() {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, null, makeInitialState);
+  useEffect(() => {
+    console.log('setting up effect');
+    const intervalId = setInterval(() => {
+      console.log('dispatching');
+      dispatch({ type: 'move-moles' });
+    }, 6000);
+    return () => {
+      console.log('cleaning up effect');
+      clearInterval(intervalId);
+    };
+  }, []);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Whack A Mole!</Text>
