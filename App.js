@@ -4,6 +4,8 @@ import { useReducer, useEffect } from 'react';
 
 import make2DArray from './make2DArray';
 import Board from './Board';
+import randomInt from './randomInt';
+
 function reducer(state, action) {
   switch (action.type) {
     case 'whack-mole': {
@@ -13,14 +15,18 @@ function reducer(state, action) {
       return makeInitialState();
     }
     case 'move-moles': {
-      return state;
+      const randomRow = randomInt(3);
+      const randomCol = randomInt(3);
+      const boardCopy = state.board.map((row) => [...row]);
+      boardCopy[randomRow][randomCol] = 'Mole';
+      return { ...state, board: boardCopy };
     }
   }
   return state;
 }
 
 function makeInitialState() {
-  return { board: make2DArray(3, 3, 'Mole') };
+  return { board: make2DArray(3, 3, null) };
 }
 
 export default function App() {
@@ -30,7 +36,7 @@ export default function App() {
     const intervalId = setInterval(() => {
       console.log('dispatching');
       dispatch({ type: 'move-moles' });
-    }, 6000);
+    }, 5000);
     return () => {
       console.log('cleaning up effect');
       clearInterval(intervalId);
