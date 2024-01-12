@@ -5,10 +5,22 @@ import { useReducer, useEffect } from 'react';
 import make2DArray from './make2DArray';
 import Board from './Board';
 import randomInt from './randomInt';
+import copy2DArray from './copy2DArray';
 
 function reducer(state, action) {
   switch (action.type) {
     case 'whack-mole': {
+      const colIndex = action.colIndex;
+      const rowIndex = action.rowIndex;
+      const boardCopy = copy2DArray(state.board);
+      if (state.board[rowIndex][colIndex] === 'Mole') {
+        boardCopy[rowIndex][colIndex] = null;
+        return {
+          ...state,
+          board: boardCopy,
+          molesWhacked: state.molesWhacked + 1,
+        };
+      }
       return state;
     }
     case 'new-game': {
@@ -17,7 +29,7 @@ function reducer(state, action) {
     case 'move-moles': {
       const randomRow = randomInt(3);
       const randomCol = randomInt(3);
-      const boardCopy = state.board.map((row) => [...row]);
+      const boardCopy = copy2DArray(state.board);
       boardCopy[randomRow][randomCol] = 'Mole';
       return { ...state, board: boardCopy };
     }
@@ -26,26 +38,24 @@ function reducer(state, action) {
 }
 
 function makeInitialState() {
-  return { board: make2DArray(3, 3, null) };
+  return { board: make2DArray(3, 3, null), molesWhacked: 0 };
 }
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, null, makeInitialState);
   useEffect(() => {
-    console.log('setting up effect');
     const intervalId = setInterval(() => {
-      console.log('dispatching');
       dispatch({ type: 'move-moles' });
-    }, 5000);
+    }, 1000);
     return () => {
-      console.log('cleaning up effect');
       clearInterval(intervalId);
     };
   }, []);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Whack A Mole!</Text>
-      <Board board={state.board} />
+      <Board board={state.board} dispatch={dispatch} />
+      <Text style={styles.title}>Moles Whacked: {state.molesWhacked}</Text>
       <StatusBar style='auto' />
     </View>
   );
