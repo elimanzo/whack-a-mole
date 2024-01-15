@@ -26,12 +26,20 @@ function reducer(state, action) {
     case 'new-game': {
       return makeInitialState();
     }
-    case 'move-moles': {
-      const randomRow = randomInt(3);
-      const randomCol = randomInt(3);
+    case 'spawn-mole': {
       const boardCopy = copy2DArray(state.board);
-      boardCopy[randomRow][randomCol] = 'Mole';
+      boardCopy[action.rowIndex][action.colIndex] = 'Mole';
       return { ...state, board: boardCopy };
+    }
+    case 'despawn-mole': {
+      const rowIndex = action.rowIndex;
+      const colIndex = action.colIndex;
+      if (state.board[rowIndex][colIndex] != null) {
+        const boardCopy = copy2DArray(state.board);
+        boardCopy[rowIndex][colIndex] = null;
+        return { ...state, board: boardCopy };
+      }
+      return state;
     }
   }
   return state;
@@ -45,8 +53,23 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, null, makeInitialState);
   useEffect(() => {
     const intervalId = setInterval(() => {
-      dispatch({ type: 'move-moles' });
-    }, 1000);
+      const randomRow = randomInt(0, 2);
+      const randomCol = randomInt(0, 2);
+      dispatch({
+        type: 'spawn-mole',
+        rowIndex: randomRow,
+        colIndex: randomCol,
+      });
+      setTimeout(
+        () =>
+          dispatch({
+            type: 'despawn-mole',
+            rowIndex: randomRow,
+            colIndex: randomCol,
+          }),
+        randomInt(100, 3000),
+      );
+    }, randomInt(1000, 4000));
     return () => {
       clearInterval(intervalId);
     };
