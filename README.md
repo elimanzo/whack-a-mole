@@ -1,3 +1,3 @@
-# Memory Match
+# whack-a-mole
 
-![Memory Match](https://i.gyazo.com/e7c7d9984d880592a07c05e242b0ab0e.png)
+https://github.com/elimanzo/whack-a-mole/assets/33636358/72edf5bc-ddbd-46c9-a6b2-5d95809151fc
