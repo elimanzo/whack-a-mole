@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import Row from './Row';
 
-export default function Board({ board, dispatch }) {
+export default function Board({ board, dispatch, isGameOver }) {
   return (
     <View style={styles.container}>
       {board.map((row, rowIndex) => (
@@ -11,6 +11,7 @@ export default function Board({ board, dispatch }) {
           rowIndex={rowIndex}
           cellValues={row}
           dispatch={dispatch}
+          isGameOver={isGameOver}
         />
       ))}
     </View>
@@ -19,7 +20,7 @@ export default function Board({ board, dispatch }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'gray',
+    backgroundColor: '#27AE60',
     gap: 8,
     borderRadius: 8,
   },

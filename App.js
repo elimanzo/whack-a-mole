@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useReducer, useEffect } from 'react';
 
 import make2DArray from './make2DArray';
@@ -24,12 +24,19 @@ function reducer(state, action) {
       return state;
     }
     case 'new-game': {
-      return makeInitialState();
+      return initialState();
+    }
+    case 'new-game-status': {
+      return gameStatusInitialState();
     }
     case 'spawn-mole': {
       const boardCopy = copy2DArray(state.board);
       boardCopy[action.rowIndex][action.colIndex] = 'Mole';
-      return { ...state, board: boardCopy };
+      return {
+        ...state,
+        board: boardCopy,
+        molesSpawned: state.molesSpawned + 1,
+      };
     }
     case 'despawn-mole': {
       const rowIndex = action.rowIndex;
@@ -41,18 +48,53 @@ function reducer(state, action) {
       }
       return state;
     }
+    case 'decrease-timer': {
+      return {
+        ...state,
+        timer: state.timer - 1,
+        isGameOver: state.timer - 1 <= 0,
+      };
+    }
   }
   return state;
 }
 
-function makeInitialState() {
-  return { board: make2DArray(3, 3, null), molesWhacked: 0 };
+function initialState() {
+  return {
+    board: make2DArray(3, 3, null),
+    molesWhacked: 0,
+    molesSpawned: 0,
+  };
 }
 
+function gameStatusInitialState() {
+  return {
+    isGameOver: false,
+    timer: 60,
+  };
+}
 export default function App() {
-  const [state, dispatch] = useReducer(reducer, null, makeInitialState);
+  const [state, dispatch] = useReducer(reducer, null, initialState);
+  const [gameStatusState, gameStatusDispatch] = useReducer(
+    reducer,
+    null,
+    gameStatusInitialState,
+  );
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const timerIntervalId = setInterval(() => {
+      if (gameStatusState.isGameOver) {
+        clearInterval(timerIntervalId);
+        return;
+      }
+      gameStatusDispatch({ type: 'decrease-timer' });
+    }, 1000);
+
+    const moleIntervalId = setInterval(() => {
+      if (gameStatusState.isGameOver) {
+        clearInterval(moleIntervalId);
+        return;
+      }
+
       const randomRow = randomInt(0, 2);
       const randomCol = randomInt(0, 2);
       dispatch({
@@ -60,25 +102,53 @@ export default function App() {
         rowIndex: randomRow,
         colIndex: randomCol,
       });
-      setTimeout(
-        () =>
-          dispatch({
-            type: 'despawn-mole',
-            rowIndex: randomRow,
-            colIndex: randomCol,
-          }),
-        randomInt(100, 3000),
-      );
-    }, randomInt(1000, 4000));
+      const despawnTimoutId = setTimeout(() => {
+        if (gameStatusState.isGameOver) {
+          clearTimeout(despawnTimoutId);
+          return;
+        }
+        dispatch({
+          type: 'despawn-mole',
+          rowIndex: randomRow,
+          colIndex: randomCol,
+        });
+      }, randomInt(500, 3000));
+    }, randomInt(500, 1500));
     return () => {
-      clearInterval(intervalId);
+      clearInterval(timerIntervalId);
+      clearInterval(moleIntervalId);
     };
-  }, []);
+  }, [gameStatusState]);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Whack A Mole!</Text>
-      <Board board={state.board} dispatch={dispatch} />
-      <Text style={styles.title}>Moles Whacked: {state.molesWhacked}</Text>
+      <Text style={styles.timer}>Timer: {gameStatusState.timer}</Text>
+      <Board
+        board={state.board}
+        dispatch={dispatch}
+        isGameOver={gameStatusState.isGameOver}
+      />
+
+      {gameStatusState.isGameOver && (
+        <>
+          <Text style={styles.info}>
+            Moles Whacked: {state.molesWhacked}
+            {'\n'}
+            Moles Appeared: {state.molesSpawned}
+            {'\n'}Accuracy Rate:{' '}
+            {((state.molesWhacked / state.molesSpawned) * 100).toFixed(2)} %
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              dispatch({ type: 'new-game' });
+              gameStatusDispatch({ type: 'new-game-status' });
+            }}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>New Game!</Text>
+          </TouchableOpacity>
+        </>
+      )}
       <StatusBar style='auto' />
     </View>
   );
@@ -94,5 +164,25 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 25,
+  },
+  timer: {
+    fontSize: 20,
+  },
+  info: {
+    textAlign: 'center',
+    position: 'absolute',
+    bottom: 110,
+    fontSize: 20,
+  },
+  button: {
+    position: 'absolute',
+    bottom: 50,
+    padding: 10,
+    backgroundColor: '#27AE60',
+    borderRadius: 10,
+  },
+  buttonText: {
+    fontSize: 20,
+    color: 'white',
   },
 });
